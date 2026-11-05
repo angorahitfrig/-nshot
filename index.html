@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#1b1b1b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="nShot">
+  <meta name="description" content="Instagram için fotoğraf tuvali: oran seç, bulanık ya da renkli arka plan ekle, kaydet ve paylaş.">
+  <title>nShot · Tuval</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="btnOpen" class="ghost-btn" type="button" aria-label="Yeni fotoğraf aç">
+        <i data-icon="plus"></i><span>Yeni</span>
+      </button>
+      <div class="brand">nShot</div>
+      <button id="btnExport" class="primary-btn" type="button" disabled>Kaydet</button>
+    </header>
+
+    <main id="stage" class="stage">
+      <div id="empty" class="empty">
+        <button id="btnPick" class="pick" type="button">
+          <i data-icon="image"></i>
+          <span>Fotoğraf Seç</span>
+        </button>
+        <p class="desktop-only">veya fotoğrafı buraya sürükleyin</p>
+      </div>
+      <canvas id="preview" hidden aria-label="Önizleme"></canvas>
+      <div id="hint" class="hint" hidden>Sürükle: taşı · İki parmak: yakınlaştır</div>
+    </main>
+
+    <section id="editor" class="editor" hidden>
+      <div class="panel-head">
+        <span id="panelTitle">Tuval</span>
+      </div>
+
+      <div class="panel" id="panel-canvas">
+        <div class="zoom-row">
+          <button id="btnFit" class="icon-btn" type="button" title="Sığdır" aria-label="Sığdır"><i data-icon="fit"></i></button>
+          <button id="btnFill" class="icon-btn" type="button" title="Doldur" aria-label="Doldur"><i data-icon="fill"></i></button>
+          <input id="zoom" type="range" min="0" max="1000" step="1" value="500" aria-label="Yakınlaştırma">
+          <button id="btnCenter" class="icon-btn" type="button" title="Ortala" aria-label="Ortala"><i data-icon="center"></i></button>
+        </div>
+        <div id="ratios" class="ratios" role="listbox" aria-label="Oran"></div>
+      </div>
+
+      <div class="panel" id="panel-bg" hidden>
+        <div class="sub-label">Bulanık</div>
+        <div id="blurs" class="swatches"></div>
+        <div class="sub-label">Renk</div>
+        <div id="colors" class="swatches"></div>
+      </div>
+
+      <nav class="tabs">
+        <button class="tab active" type="button" data-tab="canvas"><i data-icon="crop"></i><span>Tuval</span></button>
+        <button class="tab" type="button" data-tab="bg"><i data-icon="drop"></i><span>Arka Plan</span></button>
+        <button class="tab" type="button" id="btnRotate"><i data-icon="rotate"></i><span>Döndür</span></button>
+        <button class="tab" type="button" id="btnFlip"><i data-icon="flip"></i><span>Ayna</span></button>
+        <button class="tab" type="button" id="btnReset"><i data-icon="reset"></i><span>Sıfırla</span></button>
+      </nav>
+    </section>
+  </div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head">
+        <h2 id="sheetTitle">Dışa Aktar</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Kapat"><i data-icon="close"></i></button>
+      </div>
+      <div class="sheet-preview"><img id="outThumb" alt="Çıktı önizlemesi"></div>
+      <div id="outInfo" class="out-info">Hazırlanıyor…</div>
+
+      <div class="field">
+        <div class="field-label">Çözünürlük</div>
+        <div class="seg" id="segQuality">
+          <button type="button" data-q="1080">1080p</button>
+          <button type="button" data-q="1440">1440p</button>
+          <button type="button" data-q="2160">4K</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Biçim</div>
+        <div class="seg" id="segFormat">
+          <button type="button" data-f="jpeg">JPG</button>
+          <button type="button" data-f="png">PNG</button>
+        </div>
+      </div>
+      <p class="note">Instagram için 1080p yeterli; daha büyük dosyalar Instagram tarafından küçültülür.</p>
+
+      <div class="sheet-actions">
+        <button id="btnShare" class="primary-btn wide" type="button" hidden><i data-icon="share"></i><span>Paylaş</span></button>
+        <button id="btnDownload" class="secondary-btn wide" type="button"><i data-icon="download"></i><span>Cihaza Kaydet</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <input id="file" type="file" accept="image/*" hidden>
+
+  <script src="app.js"></script>
+</body>
+</html>
