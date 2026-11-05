@@ -16,7 +16,53 @@ Fotoğraflar hiçbir yere yüklenmez, tüm işlem cihazında yapılır.
   ya da **Cihaza Kaydet** ile galeriye/indirilenlere.
 - Son seçtiğin oran, arka plan ve kalite hatırlanır.
 
-## Kullanım
+## Android uygulaması (APK)
+
+`android/` klasörü, aynı web uygulamasını içeren yerel bir Android uygulamasıdır (Android 8.0 ve üzeri).
+Uygulamada ek olarak:
+
+- Fotoğraflar Android'in kendi **fotoğraf seçicisinden** seçilir
+- **Galeriye Kaydet** → `Resimler/nShot` klasörüne kaydeder
+- **Paylaş** → Instagram (Gönderi, Hikâye, Direkt) dahil tüm uygulamalara gönderir
+- Galeride bir fotoğrafta **Paylaş → nShot ile düzenle** dersen doğrudan uygulamada açılır
+- Telefonun geri tuşu dışa aktarma penceresini kapatır
+
+### APK'yı edinmek
+
+- **GitHub'dan:** depoda **Actions → Android APK** → son çalıştırma → *Artifacts* altındaki `nShot-apk`
+  (zip içinden `nShot.apk` çıkar). Kod her değiştiğinde otomatik yeniden derlenir.
+- **Kendin derlemek için:** JDK 17+ ve Android SDK kurulu olmalı:
+
+  ```bash
+  cd android
+  ./gradlew assembleRelease
+  # çıktı: android/app/build/outputs/apk/release/app-release.apk
+  ```
+
+### Telefona kurmak
+
+APK'yı telefona indir, dosyaya dokun. Android "bilinmeyen kaynaklardan yükleme" izni isterse
+(tarayıcı veya Dosyalar uygulaması için) izin ver ve **Yükle**'ye bas.
+
+### İmza anahtarı
+
+Android bir uygulamanın yeni sürümünü eskisinin üzerine ancak **aynı anahtarla** imzalandıysa kurar.
+Anahtar güvenlik için depoda tutulmaz; ortam değişkeniyle verilir:
+
+```bash
+NSHOT_KEYSTORE=/yol/nshot-release.jks NSHOT_KEYSTORE_PASSWORD=... ./gradlew assembleRelease
+```
+
+GitHub Actions'ın da aynı anahtarla imzalaması için depoya iki *secret* ekle
+(**Settings → Secrets and variables → Actions**):
+
+- `NSHOT_KEYSTORE_BASE64` – `base64 -w0 nshot-release.jks` çıktısı
+- `NSHOT_KEYSTORE_PASSWORD` – anahtar şifresi
+
+Anahtar verilmezse APK debug anahtarıyla imzalanır: kurulur ama farklı anahtarlı bir sürümü
+güncellemek için önce eskisini kaldırmak gerekir.
+
+## Web sürümü
 
 Herhangi bir statik sunucu yeterli:
 
@@ -40,6 +86,7 @@ python3 -m http.server 8000
 | `style.css` | Koyu tema, InShot benzeri yerleşim |
 | `app.js` | Tuval çizimi, hareketler, bulanıklaştırma, dışa aktarma |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Uygulama olarak kurulabilme ve çevrimdışı çalışma |
+| `android/` | Android uygulaması (WebView kabuğu, galeri/paylaşım köprüsü) |
 
 ## Sonraki adımlar için fikirler
 
@@ -47,4 +94,3 @@ python3 -m http.server 8000
 - Video desteği
 - Kenarlık / gölge, yazı ve çıkartma ekleme
 - Filtreler ve ışık/kontrast ayarları
-- Android'de galeriden "Paylaş → nShot" ile doğrudan açma

@@ -5,6 +5,9 @@
   const $$ = (s) => Array.from(document.querySelectorAll(s));
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
+  // Present when running inside the Android app (see android/…/MainActivity.java).
+  const NATIVE = window.NShotAndroid || null;
+
   /* ------------------------------------------------------------------ */
   /* Icons                                                               */
   /* ------------------------------------------------------------------ */
@@ -674,6 +677,7 @@
   let exportUrl = null;
   let exportToken = 0;
   const canShareFiles = (() => {
+    if (NATIVE) return true;
     try {
       return !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'x.jpg', { type: 'image/jpeg' })] }));
     } catch { return false; }
@@ -763,8 +767,19 @@
     buildExport();
   }));
 
-  $('#btnDownload').addEventListener('click', () => {
+  const blobToBase64 = (blob) => new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+
+  $('#btnDownload').addEventListener('click', async () => {
     if (!exportBlob) return;
+    if (NATIVE) {
+      NATIVE.saveImage(await blobToBase64(exportBlob), exportBlob.type, fileName());
+      return;
+    }
     const a = document.createElement('a');
     a.href = exportUrl;
     a.download = fileName();
@@ -776,6 +791,10 @@
 
   $('#btnShare').addEventListener('click', async () => {
     if (!exportBlob) return;
+    if (NATIVE) {
+      NATIVE.shareImage(await blobToBase64(exportBlob), exportBlob.type, fileName());
+      return;
+    }
     const file = new File([exportBlob], fileName(), { type: exportBlob.type });
     try {
       await navigator.share({ files: [file] });
@@ -796,12 +815,29 @@
     toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
   }
 
+  /* Hooks used by the Android app */
+  window.nshotOpenUrl = async (url) => {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      const b = await r.blob();
+      loadFile(new File([b], 'paylasilan', { type: b.type || 'image/jpeg' }));
+    } catch {
+      toast('Fotoğraf açılamadı');
+    }
+  };
+  window.nshotBack = () => {
+    if (!sheet.hidden) { closeExport(); return true; }
+    return false;
+  };
+
   paintIcons();
   buildBlurChips();
   markRatio();
   markBg();
+  if (NATIVE) $('#btnDownload span').textContent = 'Galeriye Kaydet';
 
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  if (!NATIVE && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 })();

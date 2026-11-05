@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The web app (index.html, style.css, app.js, icons/) lives at the repository root so it can
+// also be served by GitHub Pages. It is copied into the APK's assets at build time.
+def webRoot = rootProject.file('..')
+def webOut = layout.buildDirectory.dir('generated/web').get().asFile
+
+tasks.register('copyWeb', Copy) {
+    from(webRoot) {
+        include 'index.html', 'style.css', 'app.js', 'icons/**'
+    }
+    into new File(webOut, 'www')
+}
+
+android {
+    namespace 'io.github.angorahitfrig.nshot'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'io.github.angorahitfrig.nshot'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // Release signing key comes from the environment and is never stored in the repository.
+    // Without it, the release build falls back to the debug key (installable, but updates
+    // signed with a different key need an uninstall first).
+    def ksPath = System.getenv('NSHOT_KEYSTORE')
+    def hasKeystore = ksPath && file(ksPath).exists()
+
+    signingConfigs {
+        if (hasKeystore) {
+            release {
+                storeFile file(ksPath)
+                storePassword System.getenv('NSHOT_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('NSHOT_KEY_ALIAS') ?: 'nshot'
+                keyPassword System.getenv('NSHOT_KEY_PASSWORD') ?: System.getenv('NSHOT_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig hasKeystore ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += [webOut]
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.named('preBuild') { dependsOn 'copyWeb' }
